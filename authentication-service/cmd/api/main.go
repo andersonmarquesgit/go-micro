@@ -51,7 +51,7 @@ func main() {
 	}
 }
 
-func opendDB(dsn string) (*sql.DB, error) {
+func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
@@ -69,12 +69,12 @@ func connectToDB() *sql.DB {
 	dsn := os.Getenv("DSN")
 
 	for {
-		connection, err := opendDB(dsn)
+		connection, err := openDB(dsn)
 		if err != nil {
 			log.Println("Postgres not yet ready ...")
 			counts++
 		} else {
-			log.Println("Connect to Postrgres!")
+			log.Println("Connected to Postgres!")
 			return connection
 		}
 

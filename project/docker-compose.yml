@@ -1,67 +1,68 @@
-version: '3'
+version: '3.8'
 
 services:
+  broker-service:
+    build:
+      context: ./../broker-service
+      dockerfile: ./../broker-service/broker-service.dockerfile
+    restart: always
+    ports:
+      - "8080:80"
+    deploy:
+      mode: replicated
+      replicas: 1
 
-    broker-service:
-      build:
-        context: ./../broker-service
-        dockerfile: ./../broker-service/broker-service.dockerfile
-      restart: always
-      ports:
-        - "8080:80"
-      deploy:
-        mode: replicated
-        replicas: 1
+  logger-service:
+    build:
+      context: ./../logger-service
+      dockerfile: ./../logger-service/logger-service.dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      MONGO_URI: "mongodb://admin:password@mongo:27017"
 
-    logger-service:
-      build:
-        context: ./../logger-service
-        dockerfile: ./../logger-service/logger-service.dockerfile
-      restart: always
-      deploy:
-        mode: replicated
-        replicas: 1
-
-    authentication-service:
-      build:
-        context: ./../authentication-service
-        dockerfile: ./../authentication-service/authentication-service.dockerfile
-      restart: always
-      ports:
-        - "8081:80"
-      deploy:
-        mode: replicated
-        replicas: 1
-      environment:
-        DSN: "host=postgres port=5432 user=postgres password=password dbname=users sslmode=disable timezone=UTC connect_timeout=5"
-      depends_on:
+  authentication-service:
+    build:
+      context: ./../authentication-service
+      dockerfile: ./../authentication-service/authentication-service.dockerfile
+    restart: always
+    ports:
+      - "8081:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      DSN: "host=postgres port=5432 user=postgres password=password dbname=users sslmode=disable timezone=UTC connect_timeout=5"
+    depends_on:
       - postgres
 
-    postgres:
-      image: 'postgres:14.0'
-      ports:
-        - "5432:5432"
-      restart: always
-      deploy:
-        mode: replicated
-        replicas: 1
-      environment:
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: password
-        POSTGRES_DB: users
-      volumes:
-        - postgres-data:/var/lib/postgresql/data
+  postgres:
+    image: 'postgres:14.0'
+    ports:
+      - "5432:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
-    mongo:
-      image: 'mongo:4.2.16-bionic'
-      ports:
-        - "27017:27017"
-      environment:
-        MONGO_INITDB_DATABASE: logs
-        MONGO_INITDB_ROOT_USERNAME: admin
-        MONGO_INITDB_ROOT_PASSWORD: password
-      volumes:
-        - mongo-data:/data/db
+  mongo:
+    image: 'mongo:4.2.16-bionic'
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: logs
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongo-data:/data/db
 
 volumes:
   postgres-data:
