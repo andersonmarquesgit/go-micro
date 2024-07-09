@@ -13,6 +13,15 @@ services:
         mode: replicated
         replicas: 1
 
+    logger-service:
+      build:
+        context: ./../logger-service
+        dockerfile: ./../logger-service/logger-service.dockerfile
+      restart: always
+      deploy:
+        mode: replicated
+        replicas: 1
+
     authentication-service:
       build:
         context: ./../authentication-service
@@ -28,7 +37,6 @@ services:
       depends_on:
       - postgres
 
-
     postgres:
       image: 'postgres:14.0'
       ports:
@@ -42,4 +50,19 @@ services:
         POSTGRES_PASSWORD: password
         POSTGRES_DB: users
       volumes:
-        - ./db-data/postgres/:/var/lib/postresql/data/
+        - postgres-data:/var/lib/postgresql/data
+
+    mongo:
+      image: 'mongo:4.2.16-bionic'
+      ports:
+        - "27017:27017"
+      environment:
+        MONGO_INITDB_DATABASE: logs
+        MONGO_INITDB_ROOT_USERNAME: admin
+        MONGO_INITDB_ROOT_PASSWORD: password
+      volumes:
+        - mongo-data:/data/db
+
+volumes:
+  postgres-data:
+  mongo-data:
