@@ -31,6 +31,15 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    environment:
+      MAIL_DOMAIN: localhost
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_ENCRYPTION: none
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_FROM: "Anderson Marques"
+      MAIL_ADDRESS: "anderson@example.com"
 
   authentication-service:
     build:
@@ -79,6 +88,17 @@ services:
       - "1025:1025"
       - "8025:8025"
 
+  rabbitmq:
+    image: 'rabbitmq:3.13.4-alpine'
+    ports:
+      - "5672:5672"
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
 volumes:
   postgres-data:
   mongo-data:
+  rabbitmq-data:
