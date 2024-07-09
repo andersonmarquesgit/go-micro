@@ -103,3 +103,50 @@ func (l *LogEntry) GetOne(id string) (*LogEntry, error) {
 
 	return &entry, nil
 }
+
+func (l *LogEntry) DropCollection() error {
+	ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
+	defer cancel()
+
+	collection := client.Database("logs").Collection("logs")
+
+	if err := collection.Drop(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (l *LogEntry) Update() (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
+	defer cancel()
+
+	collection := client.Database("logs").Collection("logs")
+
+	docID, err := primitive.ObjectIDFromHex(l.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{"_id": docID}
+
+	update := bson.M{
+		"$set": bson.M{
+			"name":       l.Name,
+			"data":       l.Data,
+			"updated_at": time.Now(),
+		},
+	}
+
+	result, err := collection.UpdateOne(
+		ctx,
+		filter,
+		update,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
