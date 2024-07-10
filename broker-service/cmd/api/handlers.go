@@ -1,6 +1,7 @@
 package main
 
 import (
+	"broker/event"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -53,7 +54,10 @@ func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	case "auth":
 		app.authenticate(w, requestPayload.Auth)
 	case "log":
-		app.logItem(w, requestPayload.Log)
+		// app.logItem(w, requestPayload.Log)
+		app.logEventViaRabbitMQ(w, requestPayload.Log)
+	case "log-with-rabbit":
+		app.logEventViaRabbitMQ(w, requestPayload.Log)
 	case "mail":
 		app.sendMail(w, requestPayload.Mail)
 	default:
@@ -179,4 +183,35 @@ func (app *Config) sendMail(w http.ResponseWriter, msg MailPayload) {
 	payload.Message = "Message sent to " + msg.To
 
 	app.writeJSON(w, http.StatusAccepted, payload)
+}
+
+func (app *Config) logEventViaRabbitMQ(w http.ResponseWriter, log LoggerPayload) {
+	err := app.pushToQueue(log.Name, log.Data)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var response jsonResponse
+	response.Error = false
+	response.Message = "logged via RabbitMQ"
+
+	app.writeJSON(w, http.StatusAccepted, response)
+}
+
+func (app *Config) pushToQueue(name, msg string) error {
+	producer, err := event.NewEventProducer(app.RabbitConn)
+	if err != nil {
+		return err
+	}
+
+	payload := LoggerPayload{
+		Name: name,
+		Data: msg,
+	}
+
+	jsonData, _ := json.MarshalIndent(payload, "", "\t")
+	err = producer.Push(string(jsonData), "log.INFO")
+
+	return nil
 }
