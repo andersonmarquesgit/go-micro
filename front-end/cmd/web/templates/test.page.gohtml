@@ -11,6 +11,8 @@
                 <a id="loggerBtn" class="btn btn-outline-secondary" href= "javascript:void(0)">Test Log</a>
                 <a id="mailBtn" class="btn btn-outline-secondary" href= "javascript:void(0)">Test Mail</a>
                 <a id="loggerRabbitBtn" class="btn btn-outline-secondary" href= "javascript:void(0)">Test Log via RabbitMQ</a>
+                <a id="loggerViaRPCBtn" class="btn btn-outline-secondary" href= "javascript:void(0)">Test Log via RPC</a>
+
 
 
                 <div id="output" class="mt-5" style="outline: 1px solid silver; padding: 2em;">
@@ -41,6 +43,7 @@
     let authBrokerBtn = document.getElementById("authBrokerBtn");
     let loggerBtn = document.getElementById("loggerBtn");
     let loggerRabbitBtn = document.getElementById("loggerRabbitBtn");
+    let loggerViaRPCBtn = document.getElementById("loggerViaRPCBtn");
     let mailBtn = document.getElementById("mailBtn");
     let output = document.getElementById("output");
     let sent = document.getElementById("payload");
@@ -143,7 +146,7 @@
 
     loggerRabbitBtn.addEventListener("click", function(){
         const payload = {
-            action: "log-with-rabbit",
+            action: "log-via-rabbit",
             log: {
                 name: "event",
                 data: "Event for RabbitMQ",
@@ -168,7 +171,43 @@
             if(data.error) {
                 output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
             } else {
-                output.innerHTML += `<br><strong>Response from listener service (log)</strong>: ${data.message}`; 
+                output.innerHTML += `<br><strong>Response from listener service (log via RabbitMQ)</strong>: ${data.message}`; 
+            }
+        })
+        .catch((error) => {
+            output.innerHTML += "<br><br>Error: " + error;
+        })
+
+    })
+
+    loggerViaRPCBtn.addEventListener("click", function(){
+        const payload = {
+            action: "log-via-rpc",
+            log: {
+                name: "event",
+                data: "Event for RPC",
+            }
+        }
+
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json")
+
+        const body = {
+            method: "POST",
+            body: JSON.stringify(payload),
+            headers: headers,
+
+        }
+
+        fetch("http:\/\/localhost:8080/handle", body)
+        .then((response) => response.json())
+        .then((data) => {
+            sent.innerHTML = JSON.stringify(payload, undefined, 4);
+            received.innerHTML = JSON.stringify(data, undefined, 4);
+            if(data.error) {
+                output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
+            } else {
+                output.innerHTML += `<br><strong>Response from logger service (log via RPC)</strong>: ${data.message}`; 
             }
         })
         .catch((error) => {

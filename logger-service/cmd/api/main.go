@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"log-service/data"
+	"net"
 	"net/http"
+	"net/rpc"
 	"os"
 	"time"
 
@@ -26,18 +28,18 @@ type Config struct {
 }
 
 func main() {
-	// Conectar ao MongoDB
+	// Connect MongoDB
 	mongoClient, err := connectToMongo()
 	if err != nil {
 		log.Panicf("Can't connect to MongoDB: %v", err)
 	}
 	client = mongoClient
 
-	// Criar um contexto para desconectar
+	// Create context for disconnect
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	// Fechar conexão
+	// Close connection
 	defer func() {
 		if err = client.Disconnect(ctx); err != nil {
 			log.Fatalf("Can't disconnect to MongoDB: %v", err)
@@ -48,7 +50,12 @@ func main() {
 		Models: data.New(client),
 	}
 
-	// Iniciar servidor web
+	// Register the RPC Server
+	err = rpc.Register(new(RPCServer))
+
+	go app.rpcListen()
+
+	// start wev server
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", webPort),
 		Handler: app.routes(),
@@ -59,6 +66,24 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't start logger service %v", err)
 	}
+}
+
+func (app *Config) rpcListen() error {
+	log.Println("Starting RPC server on port ", rpcPort)
+	listen, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", rpcPort))
+	if err != nil {
+		return err
+	}
+	defer listen.Close()
+
+	for {
+		rpcConn, err := listen.Accept()
+		if err != nil {
+			continue
+		}
+		go rpc.ServeConn(rpcConn)
+	}
+
 }
 
 func connectToMongo() (*mongo.Client, error) {
