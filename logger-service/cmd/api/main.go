@@ -53,7 +53,11 @@ func main() {
 	// Register the RPC Server
 	err = rpc.Register(new(RPCServer))
 
+	// listen RPC
 	go app.rpcListen()
+
+	// listen gRPC
+	go app.gRPCListen()
 
 	// start wev server
 	srv := &http.Server{
