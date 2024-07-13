@@ -2,11 +2,17 @@ package main
 
 import (
 	"broker/event"
+	"broker/logs"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/rpc"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type RequestPayload struct {
@@ -60,6 +66,8 @@ func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 		app.logEventViaRabbitMQ(w, requestPayload.Log)
 	case "log-via-rpc":
 		app.logEventViaRPC(w, requestPayload.Log)
+	case "log-via-grpc":
+		app.logViaGRPC(w, requestPayload.Log)
 	case "mail":
 		app.sendMail(w, requestPayload.Mail)
 	default:
@@ -248,4 +256,35 @@ func (app *Config) pushToQueue(name, msg string) error {
 	err = producer.Push(string(jsonData), "log.INFO")
 
 	return nil
+}
+
+func (app *Config) logViaGRPC(w http.ResponseWriter, log LoggerPayload) {
+	conn, err := grpc.Dial("logger-service:50001", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	defer conn.Close()
+
+	client := logs.NewLogServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	_, err = client.WriteLog(ctx, &logs.LogRequest{
+		LogEntry: &logs.Log{
+			Name: log.Name,
+			Data: log.Data,
+		},
+	})
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var response jsonResponse
+	response.Error = false
+	response.Message = "Logged via gRPC"
+
+	app.writeJSON(w, http.StatusAccepted, response)
+
 }

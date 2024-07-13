@@ -12,6 +12,7 @@
                 <a id="mailBtn" class="btn btn-outline-secondary" href= "javascript:void(0)">Test Mail</a>
                 <a id="loggerRabbitBtn" class="btn btn-outline-secondary" href= "javascript:void(0)">Test Log via RabbitMQ</a>
                 <a id="loggerViaRPCBtn" class="btn btn-outline-secondary" href= "javascript:void(0)">Test Log via RPC</a>
+                <a id="loggerViaGRPCBtn" class="btn btn-outline-secondary" href= "javascript:void(0)">Test Log via gRPC</a>
 
 
 
@@ -44,6 +45,7 @@
     let loggerBtn = document.getElementById("loggerBtn");
     let loggerRabbitBtn = document.getElementById("loggerRabbitBtn");
     let loggerViaRPCBtn = document.getElementById("loggerViaRPCBtn");
+    let loggerViaGRPCBtn = document.getElementById("loggerViaGRPCBtn");
     let mailBtn = document.getElementById("mailBtn");
     let output = document.getElementById("output");
     let sent = document.getElementById("payload");
@@ -208,6 +210,42 @@
                 output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
             } else {
                 output.innerHTML += `<br><strong>Response from logger service (log via RPC)</strong>: ${data.message}`; 
+            }
+        })
+        .catch((error) => {
+            output.innerHTML += "<br><br>Error: " + error;
+        })
+
+    })
+
+    loggerViaGRPCBtn.addEventListener("click", function(){
+        const payload = {
+            action: "log-via-grpc",
+            log: {
+                name: "event",
+                data: "Event for gRPC",
+            }
+        }
+
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json")
+
+        const body = {
+            method: "POST",
+            body: JSON.stringify(payload),
+            headers: headers,
+
+        }
+
+        fetch("http:\/\/localhost:8080/handle", body)
+        .then((response) => response.json())
+        .then((data) => {
+            sent.innerHTML = JSON.stringify(payload, undefined, 4);
+            received.innerHTML = JSON.stringify(data, undefined, 4);
+            if(data.error) {
+                output.innerHTML += `<br><strong>Error:</strong> ${data.message}`;
+            } else {
+                output.innerHTML += `<br><strong>Response from logger service (log via gRPC)</strong>: ${data.message}`; 
             }
         })
         .catch((error) => {
