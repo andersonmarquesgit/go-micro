@@ -1,9 +1,10 @@
-FRONT_END_BINARY=frontApp
+FRONT_END_BINARY=frontEndApp
 BROKER_BINARY=brokerApp
 LOGGER_BINARY=loggerServiceApp
 MAIL_BINARY=mailServiceApp
 LISTENER_BINARY=listenerApp
 AUTH_BINARY=authApp
+MAILHOG_BINARY=mailHog
 
 ## up: starts all containers in the background without forcing build
 up:
@@ -12,7 +13,7 @@ up:
 	@echo "Docker images started!"
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: build_broker build_auth build_logger build_mail build_listener
+up_build: build_broker build_auth build_logger build_mail build_listener build_front build_mailhog
 	@echo "Stopping docker images (if running...)"
 	docker-compose down
 	@echo "Building (when required) and starting docker images..."
@@ -58,7 +59,13 @@ build_listener:
 ## build_front: builds the front end binary
 build_front:
 	@echo "Building front end binary..."
-	cd ../front-end && env CGO_ENABLED=0 go build -buildvcs=false -o ${FRONT_END_BINARY} ./cmd/web
+	cd ../front-end/cmd/web && env GOARCH=arm64 GOOS=linux CGO_ENABLED=0 go build -buildvcs=false -o ../../${FRONT_END_BINARY}
+	@echo "Done!"
+
+## build_mailhog: builds the MailHog binary as a linux executable
+build_mailhog:
+	@echo "Building MailHog binary..."
+	cd ../MailHog && env GOARCH=arm64 GOOS=linux CGO_ENABLED=0 go build -buildvcs=false -o ${MAILHOG_BINARY} main.go
 	@echo "Done!"
 
 ## start: starts the front end

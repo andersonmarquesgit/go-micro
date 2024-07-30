@@ -1,0 +1,153 @@
+version: '3.8'
+
+networks:
+  myswarm_network:
+    driver: overlay
+
+services:
+  caddy:
+    image: andersonmarquesdocker/micro-caddy:1.0.1
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - myswarm_network
+
+  front-end:
+    image: andersonmarquesdocker/front-end:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    networks:
+      - myswarm_network
+
+  broker-service:
+    image: andersonmarquesdocker/broker-service:1.0.1
+    deploy:
+      mode: replicated
+      replicas: 1
+    networks:
+      - myswarm_network
+
+  listener-service:
+    image: andersonmarquesdocker/listener-service:1.0.1
+    deploy:
+      mode: replicated
+      replicas: 1
+    networks:
+      - myswarm_network
+
+  authentication-service:
+    image: andersonmarquesdocker/authentication-service:1.0.1
+    ports:
+      - "8081:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      DSN: "host=postgres port=5432 user=postgres password=password dbname=users sslmode=disable timezone=UTC connect_timeout=5"
+    depends_on:
+      - postgres
+    networks:
+      - myswarm_network
+
+  logger-service:
+    image: andersonmarquesdocker/logger-service:1.0.1
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      MONGO_URI: "mongodb://admin:password@mongo:27017"
+    networks:
+      - myswarm_network
+
+  mail-service:
+    image: andersonmarquesdocker/mail-service:1.0.1
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      MAIL_DOMAIN: localhost
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_ENCRYPTION: none
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_FROM: "Anderson Marques"
+      MAIL_ADDRESS: "anderson@example.com"
+    networks:
+      - myswarm_network
+
+  rabbitmq:
+    image: 'rabbitmq:3.13.4-management-alpine'
+    deploy:
+      mode: replicated  # Mudança de global para replicated
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - myswarm_network
+
+  mailhog:
+    image: 'andersonmarquesdocker/mailhog:arm64' # Alteração para uma imagem compatível com arm64
+    deploy:
+      mode: replicated  # Mudança de global para replicated
+    ports:
+      - "8025:8025"
+    networks:
+      - myswarm_network
+
+  mongo:
+    image: 'mongo:4.2.16-bionic'
+    deploy:
+      mode: replicated  # Mudança de global para replicated
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: logs
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - myswarm_network
+
+  postgres:
+    image: 'postgres:14.0'
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    configs:
+      - source: users-sql
+        target: /docker-entrypoint-initdb.d/users.sql
+        mode: 0444
+    networks:
+      - myswarm_network
+
+volumes:
+  postgres-data:
+  mongo-data:
+  rabbitmq-data:
+  caddy-data:
+    external: true
+  caddy-config:
+
+configs:
+  users-sql:
+    file: ../authentication-service/data/users.sql
