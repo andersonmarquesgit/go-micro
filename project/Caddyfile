@@ -24,9 +24,9 @@
 localhost:80 {
 	encode zstd gzip
 	import static
-	reverse_proxy  http://myapp_front-end:8081
+	reverse_proxy  http://front-end:8081
 }
 
 backend:80 {
-	reverse_proxy http://myapp_broker-service:8080
+	reverse_proxy http://broker-service:8080
 }
