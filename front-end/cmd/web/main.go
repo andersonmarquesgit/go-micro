@@ -24,7 +24,6 @@ func main() {
 var templateFS embed.FS
 
 func render(w http.ResponseWriter, t string) {
-
 	partials := []string{
 		"templates/base.layout.gohtml",
 		"templates/header.partial.gohtml",
@@ -51,7 +50,8 @@ func render(w http.ResponseWriter, t string) {
 	// data.BrokerURL = os.Getenv("BROKER_URL")
 	data.BrokerURL = "http://localhost:8080"
 
-	if err := tmpl.Execute(w, nil); err != nil {
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
 }
