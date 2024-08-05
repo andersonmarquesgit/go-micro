@@ -20,6 +20,11 @@ spec:
         ports:
         - containerPort: 5672
         - containerPort: 15672
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: guest
+        - name: RABBITMQ_DEFAULT_PASS
+          value: guest
         resources:
           requests:
             memory: "64Mi"
@@ -27,9 +32,9 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "500m"
-    volumes:
-      - name: rabbitmq-data
-        emptyDir: {}
+      volumes:
+        - name: rabbitmq-data
+          emptyDir: {}
 
 ---
 
@@ -39,7 +44,7 @@ metadata:
   name: rabbitmq
 spec:
   selector:
-    name: rabbitmq
+    app: rabbitmq
   ports:
   - protocol: TCP
     name: rabbitmq
