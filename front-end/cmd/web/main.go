@@ -6,15 +6,22 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
+	// Carregar as variáveis do arquivo .env
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file")
+	// }
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		render(w, "test.page.gohtml")
 	})
 
-	fmt.Println("Starting front end service on port 80")
-	err := http.ListenAndServe(":80", nil)
+	fmt.Println("Starting front end service on port 8081")
+	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -47,8 +54,8 @@ func render(w http.ResponseWriter, t string) {
 		BrokerURL string
 	}
 
-	// data.BrokerURL = os.Getenv("BROKER_URL")
-	data.BrokerURL = "http://localhost:8080"
+	data.BrokerURL = os.Getenv("BROKER_URL")
+	// data.BrokerURL = "http://localhost:8080"
 
 	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

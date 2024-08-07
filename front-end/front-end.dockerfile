@@ -1,7 +1,17 @@
+FROM golang:alpine AS build
+
+WORKDIR /app
+
+COPY . .
+
+RUN go build -o frontEndApp ./cmd/web
+
 FROM alpine:latest
 
-RUN mkdir /app
+WORKDIR /app
 
-COPY frontEndApp /app
+COPY --from=build /app/frontEndApp /app/frontEndApp
 
-CMD [ "/app/frontEndApp" ]
+CMD ["/app/frontEndApp"]
+
+EXPOSE 8081
