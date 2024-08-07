@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: 'postgres:14.0'
+    ports:
+      - "5432:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    configs:
+      - source: users-sql
+        target: /docker-entrypoint-initdb.d/users.sql
+        mode: 0444
+
+volumes:
+  postgres-data:
+
+configs:
+  users-sql:
+    file: ../authentication-service/data/users.sql

@@ -51,26 +51,26 @@
     let sent = document.getElementById("payload");
     let received = document.getElementById("received");
 
-    brokerBtn.addEventListener("click", function(){
+    brokerBtn.addEventListener("click", function() {
+
         const body = {
-            method: "POST",
+            method: 'POST',
         }
 
-        fetch("http:\/\/localhost:8080", body)
+        fetch({{.BrokerURL}}, body)
         .then((response) => response.json())
         .then((data) => {
-            sent.innerHTML = "empty post request";
+            sent.innerHTML ="empty post request";
             received.innerHTML = JSON.stringify(data, undefined, 4);
-            if(data.error) {
+            if (data.error) {
                 console.log(data.message);
             } else {
-                output.innerHTML += `<br><strong>Response from broker service</strong>: ${data.message}`; 
+                output.innerHTML += `<br><strong>Response from broker service</strong>: ${data.message}`;
             }
         })
         .catch((error) => {
-            output.innerHTML += "<br><br>Error: " + error;
+            output.innerHTML += "<br><br>Eror: " + error;
         })
-
     })
 
     authBrokerBtn.addEventListener("click", function(){
@@ -92,7 +92,7 @@
 
         }
 
-        fetch("http:\/\/localhost:8080/handle", body)
+        fetch("{{.BrokerURL}}/handle", body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -129,7 +129,7 @@
 
         }
 
-        fetch("http:\/\/localhost:8080/handle", body)
+        fetch({{print .BrokerURL "/handle"}}, body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -165,7 +165,7 @@
 
         }
 
-        fetch("http:\/\/localhost:8080/handle", body)
+        fetch({{print .BrokerURL "/handle"}}, body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -201,7 +201,7 @@
 
         }
 
-        fetch("http:\/\/localhost:8080/handle", body)
+        fetch({{print .BrokerURL "/handle"}}, body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -237,7 +237,7 @@
 
         }
 
-        fetch("http:\/\/localhost:8080/handle", body)
+        fetch({{print .BrokerURL "/handle"}}, body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = JSON.stringify(payload, undefined, 4);
@@ -275,7 +275,7 @@
 
         }
 
-        fetch("http:\/\/localhost:8080/handle", body)
+        fetch({{print .BrokerURL "/handle"}}, body)
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = JSON.stringify(payload, undefined, 4);
