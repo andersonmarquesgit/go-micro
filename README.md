@@ -1,6 +1,6 @@
 # Arquitetura do Sistema
 
-![Diagrama de Arquitetura](path/to/your/image.png)
+<img src="https://i.postimg.cc/SR6nvvKT/Captura-de-Tela-2024-08-16-a-s-10-02-57.png" alt="Arquitetura do go-micro" width="600"/>
 
 ## Descrição
 
